@@ -1,0 +1,50 @@
+#!/bin/bash
+e="\x1b[";
+c=$e"39;49;00m";
+y=$e"93;01m";
+cy=$e"96;01m";
+r=$e"1;91m";
+g=$e"92;01m";
+##########################################################
+#                                                        #
+#           Carliv Image Kitchen for Android             #
+#     boot+recovery images copyright-2016 carliv@xda     #
+#    including support for MTK powered phones images     #
+#                            modified by andrwgldmn      #
+##########################################################
+abort() { cd "$PWD"; echo " "; echo -e "$cy >>$c$r Exit script$c\n"; }
+###########################################################
+bin="$PWD/.bin";
+chmod -R 755 "$bin"/*;
+cd "$PWD";
+imageinfo=$bin/imageinfo;
+###########################################################
+clear;
+echo -e "
+****************************************************
+*                                                  *
+*     $cy Carliv Image Kitchen for Android$c v1.3       *
+*  boot+recovery images copyright-2016$cy carliv@xda$c  *
+*  including support for MTK powered phones images *
+*                $g LINUX x64 version$c                *
+*                                                  *
+*                           $r modified by andrwgldmn$c*
+****************************************************
+";     
+###########################################################
+if [ ! "$1" ]; 
+  then
+  echo -e "$r Файл не выбран. Ошибка!$c";
+  abort;
+  exit 1;
+fi;
+###########################################################
+file=$(basename "$1");
+echo "Ваш файл: $file";
+echo " ";
+###########################################################
+echo -e "Показать информацию для $y $file$c";
+echo " ";
+$imageinfo "$file";
+echo "Готово!";
+echo " ";

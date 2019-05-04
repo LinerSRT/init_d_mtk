@@ -1,0 +1,33 @@
+#!/bin/bash
+echo "MTK init.d add support script by Line'R"
+echo "-----> Unpacking boot..."
+./unpack_img boot.img boot_init > /dev/null 2>&1
+cd boot_init/ramdisk
+echo "-----> Patching..."
+echo "service sysinit /system/bin/logwrapper /su/xbin/busybox run-parts /system/etc/init.d" >> init.rc
+echo "	user root" >> init.rc
+echo "	oneshot" >> init.rc
+echo "	disabled" >> init.rc
+echo "" >> init.rc
+echo "on property:sys.initd=1" >> init.rc
+echo "	start sysinit" >> init.rc
+echo "" >> init.rc
+echo "service sysinitloop /system/bin/logwrapper /su/xbin/busybox run-parts /system/etc/init.d.loop" >> init.rc
+echo "	user root" >> init.rc
+echo "	disabled" >> init.rc
+echo "" >> init.rc
+echo "on property:sys.initd.loop=1" >> init.rc
+echo "	start sysinitloop" >> init.rc
+echo "" >> init.rc
+cd ../..
+echo "-----> Repacking boot..."
+./repack_img boot_init  > /dev/null 2>&1
+rm -rf output
+mkdir output
+cp boot_init.img output/boot.img
+rm -rf boot_init && rm -rf boot_init.img
+echo "Done!"
+
+#Credits
+# Carliv - for unpack\repack tools
+# Line'R - for this script

@@ -1,0 +1,242 @@
+#!/bin/bash
+e="\x1b[";
+c=$e"39;49;00m";
+y=$e"93;01m";
+cy=$e"96;01m";
+r=$e"1;91m";
+g=$e"92;01m";
+##########################################################
+#                                                        #
+#           Carliv Image Kitchen for Android             #
+#     boot+recovery images copyright-2016 carliv@xda     #
+#    including support for MTK powered phones images     #
+#                                  modified by andrwgldmn#
+##########################################################
+abort() { cd "$PWD"; echo " "; echo -e "$cy >>$c$r Exit script$c\n"; }
+###########################################################
+bin="$PWD/.bin";
+chmod -R 755 "$bin"/*;
+cd "$PWD";
+mkbootfs=$bin/mkbootfs;
+minigzip=$bin/minigzip;
+mkbootimg=$bin/mkbootimg;
+###########################################################
+clear;
+echo -e "
+****************************************************
+*                                                  *
+*     $cy Carliv Image Kitchen for Android$c v1.3       *
+*  boot+recovery images copyright-2016$cy carliv@xda$c  *
+*  including support for MTK powered phones images *
+*                $g LINUX x64 version$c                *
+*                                                  *
+*                           $r modified by andrwgldmn$c*
+****************************************************
+";
+###########################################################
+if [ ! "$1" ]; 
+	then
+	echo -e "$r Папка не выбрана. Ошибка!$c";
+	abort;
+	exit 1;
+fi;
+###########################################################
+imgfolder=$(basename "$1");
+echo -e "Обработка $y $imgfolder$c";
+echo " ";
+cd "$imgfolder";
+###########################################################
+echo "Перепаковка....";
+echo " ";
+getfile=$(find . -name "*.img-kernel");
+myname="${getfile%.*}";
+kernel="$myname".img-kernel;
+if [[ -z "$kernel" ]];
+	then
+	echo -e "$c$y kernel$c$r утерян. Проверьте папку!. Ошибка!$c";
+	abort;
+	exit 1;
+fi;
+echo -e "kernel:$y $kernel$c";
+echo " ";
+echo -e "Сжимаем $y ramdisk$c....";
+echo " ";
+if [ ! -d "ramdisk" ];
+	then
+	echo -e "$rПапка $c$y ramdisk$c$r утеряна. Проверьте папку!. Ошибка!$c";
+	abort;
+	exit 1;
+fi;
+compress=$(cat "$myname".img-ramdisk-compress);
+echo -e "Сжатие:$y $compress$c";
+echo " ";
+###########################################################
+if [ "$compress" == "gz" ];
+	then
+	$mkbootfs ramdisk | $minigzip -c -9 > "$myname".img-ramdisk.gz;
+	ramdisk="$myname".img-ramdisk.gz;
+	echo -e "ramdisk:$y $ramdisk$c";
+	if [ ! $? -eq "0" ]; 
+	then
+	  echo -e "$r Перепаковка $c$y ramdisk$c$r провалена. Проверьте ошибки на экране и найдите решение. Ошибка!$c";
+	  abort;
+	  exit 1;
+	fi;
+fi;
+if [ "$compress" == "lzma" ];
+	then
+	$mkbootfs ramdisk | xz --format=lzma -1zv > "$myname".img-ramdisk.lzma;
+	ramdisk="$myname".img-ramdisk.lzma;
+	echo -e "ramdisk:$y $ramdisk$c";
+	if [ ! $? -eq "0" ]; 
+	then
+	  echo -e "$r Перепаковка $c$y ramdisk$c$r провалена. Проверьте ошибки на экране и найдите решение. Ошибка!$c";
+	  abort;
+	  exit 1;
+	fi;
+fi;
+if [ "$compress" == "xz" ];
+	then
+	$mkbootfs ramdisk | xz -1zv -Ccrc32 > "$myname".img-ramdisk.xz;
+	ramdisk="$myname".img-ramdisk.xz;
+	echo -e "ramdisk:$y $ramdisk$c";
+	if [ ! $? -eq "0" ]; 
+	then
+	  echo -e "$r Перепаковка $c$y ramdisk$c$r провалена. Проверьте ошибки на экране и найдите решение. Ошибка!$c";
+	  abort;
+	  exit 1;
+	fi;
+fi;
+if [ "$compress" == "bz2" ];
+	then
+	$mkbootfs ramdisk | bzip2 -v > "$myname".img-ramdisk.bz2;
+	ramdisk="$myname".img-ramdisk.bz2;
+	echo -e "ramdisk:$y $ramdisk$c";
+	if [ ! $? -eq "0" ]; 
+	then
+	  echo -e "$r Перепаковка $c$y ramdisk$c$r провалена. Проверьте ошибки на экране и найдите решение. Ошибка!$c";
+	  abort;
+	  exit 1;
+	fi;
+fi;
+if [ "$compress" == "lzo" ];
+	then
+	$mkbootfs ramdisk | lzop -v > "$myname".img-ramdisk.lzo;
+	ramdisk="$myname".img-ramdisk.lzo;
+	echo -e "ramdisk:$y $ramdisk$c";
+	if [ ! $? -eq "0" ]; 
+	then
+	  echo -e "$r Перепаковка $c$y ramdisk$c$r провалена. Проверьте ошибки на экране и найдите решение. Ошибка!$c";
+	  abort;
+	  exit 1;
+	fi;
+fi;
+if [ "$compress" == "lz4" ];
+	then
+	$mkbootfs ramdisk | lz4 -l stdin stdout > "$myname".img-ramdisk.lz4;
+	ramdisk="$myname".img-ramdisk.lz4;
+	echo -e "ramdisk:$y $ramdisk$c";
+	if [ ! $? -eq "0" ]; 
+	then
+	  echo -e "$r Перепаковка $c$y ramdisk$c$r провалена. Проверьте ошибки на экране и найдите решение. Ошибка!$c";
+	  abort;
+	  exit 1;
+	fi;
+fi;
+echo " ";
+###########################################################
+echo " ";
+echo "Получение параметров:";
+echo " ";
+######################### BOARD ###########################
+if [[ -f "$myname".img-board ]];
+	then
+	bname=$(cat "$myname".img-board);
+	echo -e "Board:$y             $bname$c";echo " ";
+fi;
+########################## BASE ############################
+if [[ -f "$myname".img-base ]];
+	then
+	base=$(cat "$myname".img-base);
+	echo -e "Base:$y              $base$c";echo " ";
+fi;
+######################## PAGESIZE ##########################
+if [[ -f "$myname".img-pagesize ]];
+	then
+	pagesize=$(cat "$myname".img-pagesize);
+	echo -e "Pagesize:$y          $pagesize$c";echo " ";
+fi;
+######################## CMDLINE ###########################
+if [[ -f "$myname".img-cmdline ]];
+	then
+	lcmd=$(cat "$myname".img-cmdline);
+	echo -e "Command line:$y      $lcmd$c";echo " ";
+fi;
+##################### KERNEL OFFSET ########################
+if [[ -f "$myname".img-kernel_offset ]];
+	then
+	keoff=$(cat "$myname".img-kernel_offset);
+	echo -e "Kernel offset:$y     $keoff$c";echo " ";
+fi;
+##################### RAMDISK OFFSET #######################
+if [[ -f "$myname".img-ramdisk_offset ]];
+	then
+	ramoff=$(cat "$myname".img-ramdisk_offset);
+	echo -e "Ramdisk offset:$y    $ramoff$c";echo " ";
+fi;
+###################### SECOND OFFSET ########################
+if [[ -f "$myname".img-second_offset ]];
+	then
+	flsec=$(cat "$myname".img-second_offset);
+	losec=" --second_offset $flsec";
+	echo -e "Second offset:$y     $flsec$c";echo " ";	
+fi;
+#################### SECOND BOOTLOADER ######################
+if [[ -f "$myname".img-second ]];
+	then
+	secboot="$myname".img-second;
+	second=" --second $secboot";
+	echo -e "Second bootloader:$y $secboot$c";echo " ";
+fi;
+###################### TAGS OFFSET ##########################
+if [[ -f "$myname".img-tags_offset ]];
+	then
+	tagoff=$(cat "$myname".img-tags_offset);
+	echo -e "Tags offset:$y       $tagoff$c";echo " ";
+fi;
+############################ DT ##############################
+if [[ -f "$myname".img-dt ]];
+	then
+	ldtb="$myname".img-dt;
+	dtb=" --dt $ldtb";
+	echo -e "Device tree blob:$y  $ldtb$c";echo " ";
+fi;
+###########################################################
+#stamp=$(date +"%Y%m%d-%H%M");
+newimage="$imgfolder".img;
+echo " ";
+echo "Перепаковка...."
+echo " ";
+if [[ -f "$myname".img-mtk ]];
+	then
+	$mkbootimg --kernel "$kernel" --ramdisk "$ramdisk" --pagesize "$pagesize" --cmdline "$lcmd" --board "$bname" --base "$base" --kernel_offset "$keoff" --ramdisk_offset "$ramoff" --tags_offset "$tagoff"$losec$second$dtb --mtk 1 -o ../output/"$newimage";
+	if [ ! $? -eq "0" ]; 
+		then
+		abort;
+		exit 1;
+	fi;
+	else
+	$mkbootimg --kernel "$kernel" --ramdisk "$ramdisk" --pagesize "$pagesize" --cmdline "$lcmd" --board "$bname" --base "$base" --kernel_offset "$keoff" --ramdisk_offset "$ramoff" --tags_offset "$tagoff"$losec$second$dtb -o ../output/"$newimage";
+	if [ ! $? -eq "0" ]; 
+		then
+		abort;
+		exit 1;
+	fi;
+fi;
+compramdisk="$myname".img-ramdisk."$compress";
+rm -f "$compramdisk";
+cd ../;
+echo " ";
+###########################################################
+echo -e "Готово! Ваш новый образ перепакован как $y $newimage$c в $g [output]$c.";
+echo " ";
